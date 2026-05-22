@@ -164,70 +164,74 @@ function Subs() {
 function SubCard({ sub, index }: { sub: Sub; index: number }) {
   const tone = ACCENT_MAP[sub.accent];
   return (
-    <motion.article
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: (index % 4) * 0.06 }}
-      className="rounded-3xl border p-7 md:p-8 h-full flex flex-col"
-      style={{
-        backgroundColor: tone.soft,
-        borderColor: "var(--border)",
-      }}
     >
-      <div className="flex items-center justify-between gap-3">
-        <span
-          className="text-[14px] md:text-[16px] tracking-tight"
-          style={{
-            fontFamily: "var(--font-mono)",
-            color: tone.solid,
-          }}
-        >
-          {sub.name}
-        </span>
-        <span
-          className="text-[10px] tracking-[0.22em] uppercase text-[color:var(--muted)]"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
-          Launch sub
-        </span>
-      </div>
-
-      <div
-        className="mt-4 text-[11px] tracking-[0.22em] uppercase"
-        style={{ fontFamily: "var(--font-mono)", color: tone.solid }}
+      <Link
+        href={`/c/${sub.slug}`}
+        className="block rounded-3xl border p-7 md:p-8 h-full flex flex-col hover:border-[color:var(--foreground)]/40 transition-colors"
+        style={{
+          backgroundColor: tone.soft,
+          borderColor: "var(--border)",
+        }}
       >
-        {sub.tagline}
-      </div>
-
-      <p className="mt-5 text-[15px] md:text-[16px] leading-[1.6] text-[color:var(--foreground)]/85 flex-1">
-        {sub.body}
-      </p>
-
-      <div className="mt-6 pt-5 border-t border-[color:var(--border)]">
-        <div
-          className="text-[10px] tracking-[0.22em] uppercase text-[color:var(--muted)] mb-3"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
-          Seed threads
+        <div className="flex items-center justify-between gap-3">
+          <span
+            className="text-[14px] md:text-[16px] tracking-tight"
+            style={{
+              fontFamily: "var(--font-mono)",
+              color: tone.solid,
+            }}
+          >
+            {sub.name}
+          </span>
+          <span
+            className="text-[10px] tracking-[0.22em] uppercase text-[color:var(--muted)]"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            Open →
+          </span>
         </div>
-        <ul className="space-y-2">
-          {sub.seeds.map((seed) => (
-            <li
-              key={seed}
-              className="flex items-start gap-3 text-[14px] leading-[1.55] text-[color:var(--foreground)]/82"
-            >
-              <span
-                className="shrink-0 mt-2 w-1 h-1 rounded-full"
-                style={{ backgroundColor: tone.solid }}
-                aria-hidden
-              />
-              <span className="font-serif italic">&ldquo;{seed}&rdquo;</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </motion.article>
+
+        <div
+          className="mt-4 text-[11px] tracking-[0.22em] uppercase"
+          style={{ fontFamily: "var(--font-mono)", color: tone.solid }}
+        >
+          {sub.tagline}
+        </div>
+
+        <p className="mt-5 text-[15px] md:text-[16px] leading-[1.6] text-[color:var(--foreground)]/85 flex-1">
+          {sub.body}
+        </p>
+
+        <div className="mt-6 pt-5 border-t border-[color:var(--border)]">
+          <div
+            className="text-[10px] tracking-[0.22em] uppercase text-[color:var(--muted)] mb-3"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            Seed threads
+          </div>
+          <ul className="space-y-2">
+            {sub.seeds.map((seed) => (
+              <li
+                key={seed}
+                className="flex items-start gap-3 text-[14px] leading-[1.55] text-[color:var(--foreground)]/82"
+              >
+                <span
+                  className="shrink-0 mt-2 w-1 h-1 rounded-full"
+                  style={{ backgroundColor: tone.solid }}
+                  aria-hidden
+                />
+                <span className="font-serif italic">&ldquo;{seed}&rdquo;</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
 
