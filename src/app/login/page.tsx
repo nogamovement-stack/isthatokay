@@ -4,23 +4,45 @@ import Link from "next/link";
 import { useState } from "react";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
+import { createClient } from "@/lib/supabase/client";
+
+type Status = "idle" | "sending" | "sent" | "error";
 
 export default function LoginPage() {
-  // NOTE: Live magic-link auth wires in next session, once Supabase is set up.
-  // For now this captures the email so we know who's at the door + shows a
-  // truthful "coming up" state instead of a broken submit.
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitted" | "error">("idle");
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = email.trim();
+    const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setErrorMsg("That email doesn't look right.");
       setStatus("error");
       return;
     }
-    // TODO: Replace with supabase.auth.signInWithOtp once Supabase env wired.
-    setStatus("submitted");
+
+    setStatus("sending");
+    setErrorMsg("");
+
+    const supabase = createClient();
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sent");
   }
 
   return (
@@ -53,21 +75,21 @@ export default function LoginPage() {
             you&apos;re in the room.
           </p>
 
-          {status === "submitted" ? (
+          {status === "sent" ? (
             <div className="mt-10 bg-[color:var(--soft)] border border-[color:var(--border)] rounded-2xl p-6 md:p-7">
               <div
                 className="text-[11px] tracking-[0.22em] uppercase text-[color:var(--accent)]"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
-                Almost open
+                Check your inbox
               </div>
               <p className="mt-3 text-[15px] leading-[1.6] text-[color:var(--foreground)]">
-                Sign-in goes live the same week the forum does. We have your
-                email. You&apos;ll be one of the first sent a link the moment
-                the door opens.
+                We just sent a link to <strong>{email}</strong>. Click it from
+                this device and you&apos;re in. The link expires in an hour.
               </p>
               <p className="mt-3 text-[13px] text-[color:var(--muted)]">
-                Email saved locally for now. Real auth ships next.
+                If it doesn&apos;t arrive in 60 seconds, check spam. Or wrong
+                email? <button onClick={() => setStatus("idle")} className="underline underline-offset-4 hover:text-[color:var(--accent)]">try a different one</button>.
               </p>
             </div>
           ) : (
@@ -86,24 +108,29 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 required
+                disabled={status === "sending"}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (status === "error") setStatus("idle");
+                  if (status === "error") {
+                    setStatus("idle");
+                    setErrorMsg("");
+                  }
                 }}
                 placeholder="you@yours.com"
-                className="bg-[color:var(--background)] border border-[color:var(--border)] rounded-full px-5 py-3.5 text-[15px] text-[color:var(--foreground)] placeholder:text-[color:var(--muted)] focus:outline-none focus:border-[color:var(--accent)] transition-colors"
+                className="bg-[color:var(--background)] border border-[color:var(--border)] rounded-full px-5 py-3.5 text-[15px] text-[color:var(--foreground)] placeholder:text-[color:var(--muted)] focus:outline-none focus:border-[color:var(--accent)] transition-colors disabled:opacity-60"
               />
               <button
                 type="submit"
-                className="mt-3 px-6 py-3.5 rounded-full bg-[color:var(--foreground)] text-[color:var(--background)] text-[12px] tracking-[0.22em] uppercase font-medium hover:bg-[color:var(--accent)] transition-colors"
+                disabled={status === "sending"}
+                className="mt-3 px-6 py-3.5 rounded-full bg-[color:var(--foreground)] text-[color:var(--background)] text-[12px] tracking-[0.22em] uppercase font-medium hover:bg-[color:var(--accent)] transition-colors disabled:opacity-60"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
-                Send me the link
+                {status === "sending" ? "Sending…" : "Send me the link"}
               </button>
-              {status === "error" && (
+              {status === "error" && errorMsg && (
                 <div className="text-[13px] text-[color:var(--danger)]">
-                  That email doesn&apos;t look right. Try again.
+                  {errorMsg}
                 </div>
               )}
             </form>
