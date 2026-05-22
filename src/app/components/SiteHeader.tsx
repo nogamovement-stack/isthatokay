@@ -28,32 +28,36 @@ export default function SiteHeader() {
     let cancelled = false;
 
     async function resolveAuth() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (cancelled) return;
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (cancelled) return;
 
-      if (!user) {
-        setAuth({ status: "signed-out" });
-        return;
-      }
+        if (!user) {
+          setAuth({ status: "signed-out" });
+          return;
+        }
 
-      // Cast through any — @supabase/ssr typed .from() resolves to `never`
-      // in this overload, a known issue with their type generics. Same shim
-      // LAYR uses across its surface.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: profile } = (await (supabase as any)
-        .from("profiles")
-        .select("username_display")
-        .eq("id", user.id)
-        .maybeSingle()) as { data: { username_display: string } | null };
+        // Cast through any — @supabase/ssr typed .from() resolves to `never`
+        // in this overload, a known issue with their type generics.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: profile } = (await (supabase as any)
+          .from("profiles")
+          .select("username_display")
+          .eq("id", user.id)
+          .maybeSingle()) as { data: { username_display: string } | null };
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (profile?.username_display) {
-        setAuth({ status: "signed-in", username: profile.username_display });
-      } else {
-        setAuth({ status: "no-handle" });
+        if (profile?.username_display) {
+          setAuth({ status: "signed-in", username: profile.username_display });
+        } else {
+          setAuth({ status: "no-handle" });
+        }
+      } catch (err) {
+        console.error("[SiteHeader] resolveAuth failed:", err);
+        if (!cancelled) setAuth({ status: "signed-out" });
       }
     }
 

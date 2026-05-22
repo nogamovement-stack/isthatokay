@@ -8,11 +8,20 @@ import type { Database } from "./types";
  * session and auth would silently break after the access token expires.
  */
 export async function updateSession(request: NextRequest) {
+  // Defensive: if Supabase env vars are missing (e.g. a misconfigured deploy),
+  // skip the session refresh entirely rather than crashing the request.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  try {
+    const supabase = createServerClient<Database>(
+    url,
+    anon,
     {
       cookies: {
         getAll() {
@@ -31,9 +40,14 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: do not put any code between createServerClient and getUser.
-  // A simple mistake here can make it very hard to debug logout issues.
-  await supabase.auth.getUser();
+    // IMPORTANT: do not put any code between createServerClient and getUser.
+    // A simple mistake here can make it very hard to debug logout issues.
+    await supabase.auth.getUser();
+  } catch (err) {
+    // Never crash the entire request on a session-refresh hiccup. Log it
+    // (visible in Vercel runtime logs) and let the user through.
+    console.error("[middleware] session refresh failed:", err);
+  }
 
   return supabaseResponse;
 }
