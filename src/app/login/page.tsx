@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import { createClient } from "@/lib/supabase/client";
@@ -9,9 +10,28 @@ import { createClient } from "@/lib/supabase/client";
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+function LoginInner() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [callbackError, setCallbackError] = useState<string | null>(null);
+
+  // If we just got bounced here from /auth/callback with an ?error=...,
+  // surface that to the user instead of silently sitting on the form.
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err) {
+      setCallbackError(decodeURIComponent(err));
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,6 +98,20 @@ export default function LoginPage() {
             that you pick a handle (any 3-20 characters, no real name) and
             you&apos;re in the room.
           </p>
+
+          {callbackError && (
+            <div className="mt-8 bg-[color:var(--danger-soft)] border border-[color:var(--danger)]/40 rounded-2xl p-5">
+              <div
+                className="text-[10px] tracking-[0.22em] uppercase text-[color:var(--danger)]"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Sign-in callback returned an error
+              </div>
+              <p className="mt-2 text-[14px] font-mono text-[color:var(--foreground)] break-all">
+                {callbackError}
+              </p>
+            </div>
+          )}
 
           {status === "sent" ? (
             <div className="mt-10 bg-[color:var(--soft)] border border-[color:var(--border)] rounded-2xl p-6 md:p-7">
