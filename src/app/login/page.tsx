@@ -26,8 +26,12 @@ export default function LoginPage() {
     setErrorMsg("");
 
     const supabase = createClient();
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    // Always use the current browser origin so the magic link comes back to
+    // whichever environment the user clicked from (localhost, vercel preview,
+    // vercel production alias, or the eventual custom domain). Removes the
+    // single most common magic-link pitfall — a stale SITE_URL env var
+    // pointing at a domain that doesn't resolve yet.
+    const siteUrl = window.location.origin;
 
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
