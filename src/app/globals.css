@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  /* Paper / ink palette — distinct from any other product. */
+  --background: #F5F0E8;        /* warm paper */
+  --foreground: #1A1614;        /* deep warm ink */
+  --muted: #8A7A6E;             /* warm mauve-gray */
+  --soft: #E8DFD1;              /* card surface, soft border */
+  --border: #D8CCBA;            /* hairline */
+  --accent: #C8551F;            /* the line — burnt amber */
+  --accent-soft: #F3E2D4;       /* accent tinted surface */
+  --warning: #B07A2E;           /* yellow zone */
+  --warning-soft: #F4E8D2;
+  --danger: #A23B1F;            /* red zone */
+  --danger-soft: #F0D9CE;
+  --ok: #4E6B3E;                /* green zone */
+  --ok-soft: #E1E8D5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-soft: var(--soft);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-dm-mono);
+  --font-serif: var(--font-bodoni);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), Inter, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--background);
+}
+
+/* Subtle paper grain — adds warmth without imagery. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 18% 24%, rgba(200, 85, 31, 0.04) 0%, transparent 38%),
+    radial-gradient(circle at 82% 78%, rgba(176, 122, 46, 0.035) 0%, transparent 42%);
+}
+
+main, header, footer {
+  position: relative;
+  z-index: 1;
+}
